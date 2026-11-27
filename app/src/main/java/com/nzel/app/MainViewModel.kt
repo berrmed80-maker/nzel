@@ -78,15 +78,27 @@ class MainViewModel : ViewModel() {
     }
 
     private fun mapError(e: Exception) {
-        val m = (e.message ?: e.toString()).lowercase()
-        errorDetail = e.message?.lineSequence()?.firstOrNull()?.take(200)
+        val full = e.message ?: e.toString()
+        android.util.Log.e("Nzel", "engine failure: $full")
+        val m = full.lowercase()
+        errorDetail = extractDetail(full)
         errorTextRes = when {
             "sign in to confirm" in m || "not a bot" in m -> R.string.error_blocked
             "unsupported url" in m -> R.string.error_unsupported
-            "login" in m || "private" in m || "empty media response" in m -> R.string.error_login_required
-            "unsupported" in m -> R.string.error_unsupported
+            "login" in m || "log in" in m || "private" in m || "empty media response" in m -> R.string.error_login_required
             else -> R.string.error_generic
         }
+    }
+
+    /** Pull the informative line out of a yt-dlp stderr dump. */
+    private fun extractDetail(full: String): String {
+        val lines = full.lines().map { it.trim() }.filter { it.isNotBlank() }
+        lines.firstOrNull { it.startsWith("ERROR:") }
+            ?.let { return it.removePrefix("ERROR:").trim().take(200) }
+        return (lines.lastOrNull {
+            !it.startsWith("Traceback") && !it.startsWith("File ") && !it.startsWith("File\"") &&
+                !it.startsWith("^^") && !it.contains("site-packages")
+        } ?: "").take(200)
     }
 
     fun download(context: Context) {

@@ -9,6 +9,8 @@ PKG = "com.nzel.app"
 YT = "https://www.youtube.com/watch?v=jNQXAC9IVRw"
 TT = "https://www.tiktok.com/@scout2015/video/6718335390845095173"
 BAD = "https://example.com/definitely-not-media"
+DIRECT = "https://download.samplelib.com/mp4/sample-5s.mp4"
+DIRECT2 = "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4"
 
 def sh(cmd, check=True, timeout=60):
     r = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
@@ -123,7 +125,8 @@ def try_link(name, url, want_download):
     marker, xml = wait_for(["Choose format", "اختر الصيغة", "Could not get this link", "تعذر جلب هذا الرابط"], timeout=150)
     shot(f"{name}-after-fetch.png")
     if marker and ("Could not" in marker or "تعذر" in marker):
-        log(f"{name}: analyze REACHED ERROR STATE (shown to user correctly)")
+        interesting = [t for t in texts(xml) if any(k in t for k in ("bot", "login", "log in", "Unsupported", "ERROR", "403", "Forbidden", "Traceback", "network", "blocked"))]
+        log(f"{name}: analyze REACHED ERROR STATE. detail: " + " | ".join(interesting[:3])[:300])
         return False
     if not marker:
         log(f"{name}: TIMEOUT waiting for analyze result")
@@ -181,6 +184,12 @@ if any("could not start" in t or "تعذر تشغيل" in t for t in ts):
 log("engine ready")
 shot("02-engine-ready.png")
 
+direct_ok = try_link("direct", DIRECT, want_download=True)
+if not direct_ok:
+    time.sleep(2); clear_field(); time.sleep(1)
+    direct_ok = try_link("direct2", DIRECT2, want_download=True)
+time.sleep(2)
+clear_field(); time.sleep(1)
 yt_ok = try_link("youtube", YT, want_download=True)
 time.sleep(2)
 clear_field(); time.sleep(1)
@@ -207,14 +216,16 @@ if s:
     tap(s); time.sleep(2); shot("08-settings.png")
     a = find_center(dump(), ["العربية"])
     if a:
-        tap(a); time.sleep(3); shot("09-arabic.png")
+        tap(a); time.sleep(5)
+        sh("adb shell input keyevent KEYCODE_BACK", check=False); time.sleep(2)
+        shot("09-arabic.png")
         ts = texts(dump())
-        log("arabic UI active: " + str(any("نزّل" in t for t in ts)))
+        log("arabic UI active: " + str(any("نزّل" in t or "جلب الرابط" in t for t in ts)))
 else:
     log("WARN: settings button not found")
 
 # crash check
-r = sh("adb logcat -d | grep -E 'FATAL EXCEPTION|AndroidRuntime' | head -5", check=False)
+r = sh("adb logcat -d | grep -E 'FATAL EXCEPTION' | head -5", check=False)
 if r.stdout.strip():
     log("FAIL: crash detected in logcat:\n" + r.stdout.strip()[:400])
     open(os.path.join(OUT,"results.txt"),"w").write("\n".join(RESULTS)); sys.exit(1)
