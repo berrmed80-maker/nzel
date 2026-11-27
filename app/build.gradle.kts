@@ -85,8 +85,13 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("io.coil-kt:coil-compose:2.6.0")
-    implementation("com.github.yausername.youtubedl-android:library:0.14.0")
-    implementation("com.github.yausername.youtubedl-android:ffmpeg:0.14.0")
+    // youtubedl-android 0.18.1 (Python 3.11) built from source in CI into app/libs
+    implementation(files("libs/library-release.aar"))
+    implementation(files("libs/common-release.aar"))
+    implementation(files("libs/ffmpeg-release.aar"))
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
+    implementation("commons-io:commons-io:2.15.1")
+    implementation("org.apache.commons:commons-compress:1.26.2")
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
 }

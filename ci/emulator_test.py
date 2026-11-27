@@ -125,7 +125,8 @@ def try_link(name, url, want_download):
     marker, xml = wait_for(["Choose format", "اختر الصيغة", "Could not get this link", "تعذر جلب هذا الرابط"], timeout=150)
     shot(f"{name}-after-fetch.png")
     if marker and ("Could not" in marker or "تعذر" in marker):
-        interesting = [t for t in texts(xml) if any(k in t for k in ("bot", "login", "log in", "Unsupported", "ERROR", "403", "Forbidden", "Traceback", "network", "blocked"))]
+        skip = ("Could not get this link", "تعذر جلب هذا الرابط", "Something went wrong. Check the link and your connection.", "حدث خطأ ما", "Retry", "إعادة المحاولة", "Fetch link", "جلب الرابط")
+        interesting = [t for t in texts(xml) if t not in skip and len(t) > 3]
         log(f"{name}: analyze REACHED ERROR STATE. detail: " + " | ".join(interesting[:3])[:300])
         return False
     if not marker:

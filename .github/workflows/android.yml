@@ -21,6 +21,14 @@ jobs:
           SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$SDKM" --licenses > /dev/null || true
           "$SDKM" "platforms;android-34" "build-tools;34.0.0"
+      - name: Build youtubedl-android 0.18.1 AARs (Python 3.11 engine)
+        run: |
+          git clone --depth 1 --branch 0.18.1 https://github.com/yausername/youtubedl-android.git /tmp/ydla
+          cd /tmp/ydla
+          chmod +x gradlew
+          ./gradlew :library:assembleRelease :common:assembleRelease :ffmpeg:assembleRelease --stacktrace
+          mkdir -p "$GITHUB_WORKSPACE/app/libs"
+          cp library/build/outputs/aar/library-release.aar common/build/outputs/aar/common-release.aar ffmpeg/build/outputs/aar/ffmpeg-release.aar "$GITHUB_WORKSPACE/app/libs/"
       - name: Unit tests
         run: |
           chmod +x gradlew
