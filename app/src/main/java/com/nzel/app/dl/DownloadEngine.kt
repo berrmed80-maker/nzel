@@ -61,7 +61,10 @@ object DownloadEngine {
         if (!ready) return@withContext false
         updateState = "updating"
         val ok = try {
-            YoutubeDL.getInstance().updateYoutubeDL(context.applicationContext) == YoutubeDL.UpdateStatus.DONE
+            run {
+            val st = YoutubeDL.getInstance().updateYoutubeDL(context.applicationContext)
+            st == YoutubeDL.UpdateStatus.DONE || st == YoutubeDL.UpdateStatus.ALREADY_UP_TO_DATE
+        }
         } catch (_: Exception) { false }
         if (ok) {
             engineVersion = try { YoutubeDL.getInstance().version(context.applicationContext) } catch (_: Exception) { engineVersion }
